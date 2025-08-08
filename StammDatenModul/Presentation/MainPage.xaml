@@ -1,0 +1,62 @@
+﻿<Page x:Class="StammDatenModul.Presentation.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:StammDatenModul.Presentation"
+      xmlns:uen="using:Uno.Extensions.Navigation.UI"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      xmlns:um="using:Uno.Material"
+      NavigationCacheMode="Required"
+      Background="{ThemeResource BackgroundBrush}">
+    <ScrollViewer IsTabStop="True">
+        <Grid utu:SafeArea.Insets="VisibleBounds">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <utu:NavigationBar Content="{Binding Title}" />
+
+            <StackPanel x:Name="Auswahl"
+          Grid.Row="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="16">
+                <TextBlock Text="Tabelle"
+           ></TextBlock>
+                <ComboBox x:Name="CBTabelle"
+       
+       />
+                <Button x:Name="SearchDB" Content="Suchen" Click="BTNAuswahl"></Button>
+
+                <Button x:Name="Neu" Content="Neu" Click="BTNAuswahl"></Button>
+            </StackPanel>
+            <StackPanel x:Name="TabellenMaske"
+                        Grid.Row="1" Visibility="Collapsed"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="16">>
+                <Button x:Name="BTNNeu" Content="Neu" Click="BTNNeu_Click" /> "
+                <Button x:Name="ZurueckNeu" Content="Zurück" Click="BTNZurueck"></Button>
+            </StackPanel>
+            <StackPanel x:Name="Suchen"
+                    Grid.Row="1" Visibility="Collapsed"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="16">>
+                <Button x:Name="ZurueckSuchen" Content="Zurück" Click="BTNZurueck"></Button>
+            </StackPanel>
+            <StackPanel x:Name="ErgebnisPanel"
+                        Grid.Row="1" Visibility="Collapsed"
+HorizontalAlignment="Center"
+VerticalAlignment="Center"
+Spacing="16">>
+            </StackPanel>
+
+            <StackPanel x:Name="EditPanel"
+                        Grid.Row="1" Visibility="Collapsed"
+HorizontalAlignment="Center"
+VerticalAlignment="Center"
+Spacing="16">>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Page>
