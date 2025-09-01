@@ -40,6 +40,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FirebirdSql.EntityFrameworkCore.Firebird" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -47,6 +49,14 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StammDatenModulData\StammDatenModulData.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Config\notAllowedEntityTypes.geConf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\ValidationRules.geConf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

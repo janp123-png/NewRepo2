@@ -9,6 +9,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="FirebirdSql.EntityFrameworkCore.Firebird" Version="12.0.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.14.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Scripting.Common" Version="4.14.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

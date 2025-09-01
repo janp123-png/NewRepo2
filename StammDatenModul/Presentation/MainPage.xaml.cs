@@ -3,11 +3,14 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using Microsoft.UI;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Input;
+using StammDatenModul.Config;
 using StammDatenModul.Models;
 using StammDatenModul.Utility;
+using StammDatenModul.Validator;
 using StammDatenModulData.Data;
 using StammDatenModulData.Models;
 
@@ -16,162 +19,16 @@ namespace StammDatenModul.Presentation;
 public sealed partial class MainPage : Page
 {
     MyDbContext _context = new MyDbContext();
-    List<string> _notAllowedEntityTypes = new List<string>
-    {
-"ABSCHREIBUNG",
-"ALLOCATION_GROUPS",
-"ANGEBOT_DETAIL",
-"ANGEBOT_MASTER",
-"ANGEBOT_MASTER_MWST",
-"ARTIKEL_ANGEBOT",
-"ARTIKEL_EINKAUF",
-"ARTIKEL_ETIKET",
-"ARTIKEL_LIEFERANTEN",
-"ARTIKEL_MHD_DATUM",
-"ARTIKEL_PREIS",
-"ARTIKEL_TMP",
-"ARTIKEL_VERBINDLICHKEIT",
-"AUFTRAG_DETAIL",
-"AUFTRAG_MASTER",
-"AUFTRAG_MASTER_MWST",
-"BANK_DATEN",
-"BARCODE_GEN",
-"BARGELD",
-"BESTELLUNG_DETAIL",
-"BESTELLUNG_MASTER",
-"BON_REFERENCES",
-"BUSINESSCASES",
-"CASHPOINTCLOSING",
-"CASHREGISTER",
-"CASH_PER_CURRENCY",
-"DATAPAYMENT",
-"DATENSCHUTZ",
-"DATEV_BUCHUNGSART",
-"DIGI_BON",
-"DIGI_BON_ARTIKEL",
-"DSFINVK_TSE",
-"GESTRO_DATUM",
-"GESTRO_LOG",
-"INVENTUR",
-"ITEMAMOUNTS",
-"KASSEN",
-"KASSENBUCH_DETAIL",
-"KASSENBUCH_MASTER",
-"KASSIERER_SITZUNG",
-"LAYOUT",
-"LIEFERANT_ARTIKEL",
-"LIEFERSCHEIN_DETAIL",
-"LIEFERSCHEIN_MASTER",
-"LIEFERSCHEIN_MASTER_TMP",
-"LINES",
-"LINES_VAT",
-"LOCATION",
-"MON$ATTACHMENTS",
-"MON$CALL_STACK",
-"MON$COMPILED_STATEMENTS",
-"MON$CONTEXT_VARIABLES",
-"MON$DATABASE",
-"MON$IO_STATS",
-"MON$MEMORY_USAGE",
-"MON$RECORD_STATS",
-"MON$STATEMENTS",
-"MON$TABLE_STATS",
-"MON$TRANSACTIONS",
-"MT_WAAGE_ABTEILUNG",
-"MT_WAAGE_ARTIKEL",
-"MT_WAAGE_WARENGRUPPE",
-"MWST_SATZ",
-"PA",
-"PAYMENT",
-"PREFORM_RECHNUNG_DETAIL",
-"PREFORM_RECHNUNG_MASTER",
-"PREFORM_RECHNUNG_MASTER_MWST",
-"PROTOKOLL",
-"QUITTUNGSNUMMER",
-"RDB$AUTH_MAPPING",
-"RDB$BACKUP_HISTORY",
-"RDB$CHARACTER_SETS",
-"RDB$CHECK_CONSTRAINTS",
-"RDB$COLLATIONS",
-"RDB$CONFIG",
-"RDB$DATABASE",
-"RDB$DB_CREATORS",
-"RDB$DEPENDENCIES",
-"RDB$EXCEPTIONS",
-"RDB$FIELDS",
-"RDB$FIELD_DIMENSIONS",
-"RDB$FILES",
-"RDB$FILTERS",
-"RDB$FORMATS",
-"RDB$FUNCTIONS",
-"RDB$FUNCTION_ARGUMENTS",
-"RDB$GENERATORS",
-"RDB$INDEX_SEGMENTS",
-"RDB$INDICES",
-"RDB$KEYWORDS",
-"RDB$LOG_FILES",
-"RDB$PACKAGES",
-"RDB$PAGES",
-"RDB$PROCEDURES",
-"RDB$PROCEDURE_PARAMETERS",
-"RDB$PUBLICATIONS",
-"RDB$PUBLICATION_TABLES",
-"RDB$REF_CONSTRAINTS",
-"RDB$RELATIONS",
-"RDB$RELATION_CONSTRAINTS",
-"RDB$RELATION_FIELDS",
-"RDB$ROLES",
-"RDB$SECURITY_CLASSES",
-"RDB$TIME_ZONES",
-"RDB$TRANSACTIONS",
-"RDB$TRIGGERS",
-"RDB$TRIGGER_MESSAGES",
-"RDB$TYPES",
-"RDB$USER_PRIVILEGES",
-"RDB$VIEW_RELATIONS",
-"RECHNUNG_DETAIL",
-"RECHNUNG_MASTER",
-"RECHNUNG_MASTER_MWST",
-"RECHNUNG_ZAHLUNGEN",
-"SCHUBLADE_INFO",
-"SEC$DB_CREATORS",
-"SEC$GLOBAL_AUTH_MAPPING",
-"SEC$USERS",
-"SEC$USER_ATTRIBUTES",
-"SLAVES",
-"SONDER_BARCODE",
-"SUBITEMS",
-"TERMINAL_INFO",
-"TRANSACTIONS",
-"TRANSACTIONS_TSE",
-"TRANSACTIONS_VAT",
-"TSE",
-"VAT",
-"VERKAUF_DETAIL",
-"VERKAUF_MASTER",
-"VERKAUF_MWST",
-"VERKAUF_ZVT",
-"VERTRAG_KUNDEN",
-"VERTRAG_ZAHLUNGEN",
-"WAAGE_ABTEILUNG_TMP",
-"WAAGE_ARTIKEL_HISTORY",
-"WAAGE_ARTIKEL_TMP",
-"WAAGE_BILDER",
-"WAAGE_FIRMENDATEN_TMP",
-"WAAGE_MITARBEITER_TMP",
-"WAAGE_MWST",
-"WAAGE_WARENGRUPPEN_TMP",
-"WE_DETAIL",
-"WE_MASTER",
-"ZAHL_PROTOKOL",
-"ZVT_KASSENSCHNITT",
-"Z_BERICHT",
-
-    };
+    List<string> _notAllowedEntityTypes = new();
+    Dictionary<string, List<Rule>> _rules = new();
     public MainPage()
     {
         this.InitializeComponent();
+        var tempEntityTypes = SecureDecryptHelper.ReadContainerFromFile("notAllowedEntityTypes.geConf");
+        _notAllowedEntityTypes = JsonSerializer.Deserialize<List<string>>(tempEntityTypes);
         CBTabelle.ItemsSource = EntityTypes();
+        var tempRules = SecureDecryptHelper.ReadContainerFromFile("ValidationRules.geConf");
+        _rules = JsonSerializer.Deserialize<Dictionary<string, List<Rule>>>(tempRules);
     }
     public List<string> EntityTypes()
     {
@@ -406,7 +263,7 @@ public sealed partial class MainPage : Page
     }
     public void Speichern(object sender, EventArgs e)
     {
-       
+
         var tempTabelle = CBTabelle.SelectedItem as string;
         var temp = EingabenSammeln(TabellenMaske);
         if (temp.Count == 0)
@@ -618,7 +475,6 @@ public sealed partial class MainPage : Page
             Debug.WriteLine("Datensatz gelöscht: " + datensatz);
         }
     }
-
     private void ZeilenButton_Click(object sender, RoutedEventArgs e)
     {
         ElementeAusblenden(EditPanel);
@@ -684,6 +540,7 @@ public sealed partial class MainPage : Page
     }
     public async Task SpeichereDynamischAsync(string tabellenName, Dictionary<string, object> daten)
     {
+        var validator = new DynamicValidator(TimeSpan.FromMilliseconds(250));
         var entityType = typeof(MyDbContext).Assembly
             .GetTypes()
             .FirstOrDefault(t => t.IsClass && t.Namespace == "StammDatenModulData.Models" && t.Name == tabellenName);
@@ -713,8 +570,20 @@ public sealed partial class MainPage : Page
                 }
             }
 
+
             prop.SetValue(entity, convertedValue);
         }
+        ValidationResult result = await validator.ValidateAsync(entity!, tabellenName, _rules);
+        if (result.Results.Any(r => !r.Passed))
+        {
+            var fehlerMeldungen = string.Join("\n",
+                result.Results
+                      .Where(r => !r.Passed)
+                      .Select(r => $"{r.RuleName}: {r.Message}"));
+
+            throw new ValidationException($"Validierungsfehler:\n{fehlerMeldungen}");
+        }
+
 
         _context.Add(entity);
         _context.SaveChanges();
@@ -753,14 +622,6 @@ public sealed partial class MainPage : Page
         _context.Remove(entityFromDb);
         await _context.SaveChangesAsync();
     }
-
-
-    // Um ein object (z.B. datensatz) in ein Objekt vom Typ entityType zu "casten", musst du es entweder direkt als Instanz dieses Typs haben
-    // oder die Werte manuell in eine neue Instanz kopieren (Mapping). Ein direktes Casten mit (entityType)obj ist in C# nicht möglich, 
-    // wenn der Typ nur zur Laufzeit bekannt ist. Du kannst aber z.B. mit Reflection die Properties setzen:
-
-    // Beispiel: Mapping von einem Dictionary<string, object> (wie bei deinen Methoden) auf eine Instanz von entityType
-
     public static object MappeZuEntity(Type entityType, object daten)
     {
         // daten sollte ein Dictionary<string, object> sein
