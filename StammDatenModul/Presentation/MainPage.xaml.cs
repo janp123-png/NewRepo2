@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.UI;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Input;
@@ -21,14 +23,27 @@ public sealed partial class MainPage : Page
     MyDbContext _context = new MyDbContext();
     List<string> _notAllowedEntityTypes = new();
     Dictionary<string, List<Rule>> _rules = new();
+    static List<string> _boolTable = new();
+    static List<string> _boolTableInt = new();
     public MainPage()
     {
         this.InitializeComponent();
-        var tempEntityTypes = SecureDecryptHelper.ReadContainerFromFile("notAllowedEntityTypes.geConf");
-        _notAllowedEntityTypes = JsonSerializer.Deserialize<List<string>>(tempEntityTypes);
         CBTabelle.ItemsSource = EntityTypes();
+        var tempEntityTypes = SecureDecryptHelper.ReadContainerFromFile("notAllowedEntityTypes.geConf");
         var tempRules = SecureDecryptHelper.ReadContainerFromFile("ValidationRules.geConf");
-        _rules = JsonSerializer.Deserialize<Dictionary<string, List<Rule>>>(tempRules);
+        var tempBoolTable = SecureDecryptHelper.ReadContainerFromFile("bool.geConf");
+        var tempBoolTableInt = SecureDecryptHelper.ReadContainerFromFile("boolInt.geConf");
+        
+        
+        _notAllowedEntityTypes = JsonSerializer.Deserialize<List<string>>(tempEntityTypes);
+        _boolTable = JsonSerializer.Deserialize<List<string>>(tempBoolTable);
+        _boolTableInt = JsonSerializer.Deserialize<List<string>>(tempBoolTable);
+        _rules = JsonSerializer.Deserialize<Dictionary<string, List<Rule>>>(
+            tempRules,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });        
     }
     public List<string> EntityTypes()
     {
@@ -180,7 +195,20 @@ public sealed partial class MainPage : Page
     public static UIElement iElement(ColumnDefinitionDatabase type)
     {
         // Nullable-Typen extrahieren (z. B. System.Nullable`1[System.Int32] -> System.Int32)
-
+        foreach (var x in _boolTable)
+        {
+            if (type.Name == x)
+            {
+                return new CheckBox { Tag = type.Name };
+            }
+        }
+        foreach (var x in _boolTableInt)
+        {
+            if (type.Name == x)
+            {
+                return new CheckBox { Tag = type.Name };
+            }
+        }
         if (type.DataType == typeof(string))
             return new TextBox { Tag = type.Name };
 
@@ -335,18 +363,36 @@ public sealed partial class MainPage : Page
                     break;
 
                 case CheckBox cb when cb.IsChecked.HasValue:
-                    if (cb.Tag is string spalte2)
-                        werte[spalte2] = cb.IsChecked.Value;
+                    {
+                        if (cb.Tag is string spalte)
+                        {
+                            if (_boolTable.Contains(spalte))
+                            {
+                                // Als String speichern
+                                werte[spalte] = cb.IsChecked.Value ? "JA" : "NEIN";
+                            }
+                            else if (_boolTableInt.Contains(spalte)) 
+                            {
+                                werte[spalte]= cb.IsChecked.Value ? 1 : 0;  
+                            }
+                            else
+                            {
+                                // Als bool speichern
+                                werte[spalte] = cb.IsChecked.Value;
+                            }
+                        }
+                    }
                     break;
+
 
                 case DatePicker dp when dp.SelectedDate.HasValue:
-                    if (dp.Tag is string spalte3)
-                        werte[spalte3] = dp.SelectedDate.Value;
-                    break;
+                if (dp.Tag is string spalte3)
+                    werte[spalte3] = dp.SelectedDate.Value;
+                break;
 
-                default:
-                    // Falls du weitere UI-Typen wie TimePicker o.ä. ergänzen willst
-                    break;
+            default:
+                // Falls du weitere UI-Typen wie TimePicker o.ä. ergänzen willst
+                break;
             }
         }
 
@@ -540,7 +586,7 @@ public sealed partial class MainPage : Page
     }
     public async Task SpeichereDynamischAsync(string tabellenName, Dictionary<string, object> daten)
     {
-        var validator = new DynamicValidator(TimeSpan.FromMilliseconds(250));
+
         var entityType = typeof(MyDbContext).Assembly
             .GetTypes()
             .FirstOrDefault(t => t.IsClass && t.Namespace == "StammDatenModulData.Models" && t.Name == tabellenName);
@@ -573,18 +619,23 @@ public sealed partial class MainPage : Page
 
             prop.SetValue(entity, convertedValue);
         }
-        ValidationResult result = await validator.ValidateAsync(entity!, tabellenName, _rules);
-        if (result.Results.Any(r => !r.Passed))
-        {
-            var fehlerMeldungen = string.Join("\n",
-                result.Results
-                      .Where(r => !r.Passed)
-                      .Select(r => $"{r.RuleName}: {r.Message}"));
 
+        //if (result.Results.Any(r => !r.Passed))
+        //{
+        //    var fehlerMeldungen = string.Join("\n",
+        //        result.Results
+        //              .Where(r => !r.Passed)
+        //              .Select(r => $"{r.RuleName}: {r.Message}"));
+
+        //    throw new ValidationException($"Validierungsfehler:\n{fehlerMeldungen}");
+        //}
+        var validator = new GenericValidator(_rules);
+        var artikelErrors = validator.Validate(entity);
+        if(artikelErrors.Any())
+        {
+            var fehlerMeldungen = string.Join("\n", artikelErrors);
             throw new ValidationException($"Validierungsfehler:\n{fehlerMeldungen}");
         }
-
-
         _context.Add(entity);
         _context.SaveChanges();
     }

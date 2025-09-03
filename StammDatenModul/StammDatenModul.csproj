@@ -51,6 +51,12 @@
     <ProjectReference Include="..\StammDatenModulData\StammDatenModulData.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Config\bool.geConf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\boolInt.geConf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Config\notAllowedEntityTypes.geConf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
