@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.UI;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Input;
-using StammDatenModul.Config;
 using StammDatenModul.Models;
 using StammDatenModul.Utility;
 using StammDatenModul.Validator;
@@ -25,6 +24,7 @@ public sealed partial class MainPage : Page
     Dictionary<string, List<Rule>> _rules = new();
     static List<string> _boolTable = new();
     static List<string> _boolTableInt = new();
+    public Logger _logger = new Logger();
     public MainPage()
     {
         this.InitializeComponent();
@@ -33,8 +33,8 @@ public sealed partial class MainPage : Page
         var tempRules = SecureDecryptHelper.ReadContainerFromFile("ValidationRules.geConf");
         var tempBoolTable = SecureDecryptHelper.ReadContainerFromFile("bool.geConf");
         var tempBoolTableInt = SecureDecryptHelper.ReadContainerFromFile("boolInt.geConf");
-        
-        
+
+
         _notAllowedEntityTypes = JsonSerializer.Deserialize<List<string>>(tempEntityTypes);
         _boolTable = JsonSerializer.Deserialize<List<string>>(tempBoolTable);
         _boolTableInt = JsonSerializer.Deserialize<List<string>>(tempBoolTable);
@@ -43,7 +43,7 @@ public sealed partial class MainPage : Page
             new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
-            });        
+            });
     }
     public List<string> EntityTypes()
     {
@@ -371,9 +371,9 @@ public sealed partial class MainPage : Page
                                 // Als String speichern
                                 werte[spalte] = cb.IsChecked.Value ? "JA" : "NEIN";
                             }
-                            else if (_boolTableInt.Contains(spalte)) 
+                            else if (_boolTableInt.Contains(spalte))
                             {
-                                werte[spalte]= cb.IsChecked.Value ? 1 : 0;  
+                                werte[spalte] = cb.IsChecked.Value ? 1 : 0;
                             }
                             else
                             {
@@ -386,13 +386,13 @@ public sealed partial class MainPage : Page
 
 
                 case DatePicker dp when dp.SelectedDate.HasValue:
-                if (dp.Tag is string spalte3)
-                    werte[spalte3] = dp.SelectedDate.Value;
-                break;
+                    if (dp.Tag is string spalte3)
+                        werte[spalte3] = dp.SelectedDate.Value;
+                    break;
 
-            default:
-                // Falls du weitere UI-Typen wie TimePicker o.ä. ergänzen willst
-                break;
+                default:
+                    // Falls du weitere UI-Typen wie TimePicker o.ä. ergänzen willst
+                    break;
             }
         }
 
@@ -584,15 +584,18 @@ public sealed partial class MainPage : Page
             }
         }
     }
+    // --- Änderungen in SpeichereDynamischAsync ---
     public async Task SpeichereDynamischAsync(string tabellenName, Dictionary<string, object> daten)
     {
-
         var entityType = typeof(MyDbContext).Assembly
             .GetTypes()
             .FirstOrDefault(t => t.IsClass && t.Namespace == "StammDatenModulData.Models" && t.Name == tabellenName);
 
         if (entityType == null)
+        {
+            _logger.Log($"Typ '{tabellenName}' nicht gefunden.");
             throw new Exception($"Typ '{tabellenName}' nicht gefunden.");
+        }
 
         var entity = Activator.CreateInstance(entityType);
 
@@ -609,73 +612,81 @@ public sealed partial class MainPage : Page
                 {
                     convertedValue = Convert.ChangeType(kvp.Value, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Optional: Logge Problem
+                    _logger.Log($"Fehler beim Konvertieren von '{kvp.Key}': {ex.Message}");
                     continue;
                 }
             }
 
-
             prop.SetValue(entity, convertedValue);
         }
 
-        //if (result.Results.Any(r => !r.Passed))
-        //{
-        //    var fehlerMeldungen = string.Join("\n",
-        //        result.Results
-        //              .Where(r => !r.Passed)
-        //              .Select(r => $"{r.RuleName}: {r.Message}"));
-
-        //    throw new ValidationException($"Validierungsfehler:\n{fehlerMeldungen}");
-        //}
         var validator = new GenericValidator(_rules);
         var artikelErrors = validator.Validate(entity);
-        if(artikelErrors.Any())
+        if (artikelErrors.Any())
         {
             var fehlerMeldungen = string.Join("\n", artikelErrors);
+            _logger.Log($"Validierungsfehler beim Speichern: {fehlerMeldungen}");
             throw new ValidationException($"Validierungsfehler:\n{fehlerMeldungen}");
         }
         _context.Add(entity);
         _context.SaveChanges();
     }
+    // --- Änderungen in LoeschenDynamischAsync ---
     public async Task LoeschenDynamischAsync(string tabellenName, object daten)
     {
-        var entityType = typeof(MyDbContext).Assembly
-            .GetTypes()
-            .FirstOrDefault(t => t.IsClass && t.Namespace == "StammDatenModulData.Models" && t.Name == tabellenName);
+        try
+        {
+            var entityType = typeof(MyDbContext).Assembly
+                .GetTypes()
+                .FirstOrDefault(t => t.IsClass && t.Namespace == "StammDatenModulData.Models" && t.Name == tabellenName);
 
-        if (entityType == null)
-            throw new Exception($"Typ '{tabellenName}' nicht gefunden.");
-
-        // Primärschlüssel-Felder herausfinden
-        var entityTypeInfo = _context.Model.FindEntityType(entityType);
-        var keyProperties = entityTypeInfo.FindPrimaryKey().Properties;
-
-        // Schlüsselwerte extrahieren
-        var keyValues = keyProperties
-            .Select(p =>
+            if (entityType == null)
             {
-                var prop = daten.GetType().GetProperty(p.Name);
-                if (prop == null)
-                    throw new Exception($"Property '{p.Name}' fehlt im Datensatz.");
+                _logger.Log($"Typ '{tabellenName}' nicht gefunden.LoeschenDynamischAsync");
+                throw new Exception($"Typ '{tabellenName}' nicht gefunden.");
+            }
 
-                return prop.GetValue(daten);
-            })
-            .ToArray();
+            // Primärschlüssel-Felder herausfinden
+            var entityTypeInfo = _context.Model.FindEntityType(entityType);
+            var keyProperties = entityTypeInfo.FindPrimaryKey().Properties;
 
-        // Objekt aus DB laden
-        var entityFromDb = await _context.FindAsync(entityType, keyValues);
-        if (entityFromDb == null)
-            throw new Exception("Datensatz nicht gefunden.");
+            // Schlüsselwerte extrahieren
+            var keyValues = keyProperties
+                .Select(p =>
+                {
+                    var prop = daten.GetType().GetProperty(p.Name);
+                    if (prop == null)
+                    {
+                        _logger.Log($"Property '{p.Name}' fehlt im Datensatz.LoeschenDynamischAsync");
+                        throw new Exception($"Property '{p.Name}' fehlt im Datensatz.");
+                    }
+                    return prop.GetValue(daten);
+                })
+                .ToArray();
 
-        // Löschen
-        _context.Remove(entityFromDb);
-        await _context.SaveChangesAsync();
+            // Objekt aus DB laden
+            var entityFromDb = await _context.FindAsync(entityType, keyValues);
+            if (entityFromDb == null)
+            {
+                _logger.Log("Datensatz nicht gefunden.LoeschenDynamischAsync");
+                throw new Exception("Datensatz nicht gefunden.");
+            }
+
+            // Löschen
+            _context.Remove(entityFromDb);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Log($"Fehler beim Löschen: {ex.Message}");
+            Debug.WriteLine("Fehler beim Löschen: " + ex.Message);
+        }
     }
+    // --- Änderungen in MappeZuEntity ---
     public static object MappeZuEntity(Type entityType, object daten)
     {
-        // daten sollte ein Dictionary<string, object> sein
         var entity = Activator.CreateInstance(entityType);
         if (daten is Dictionary<string, object> dict)
         {
@@ -691,8 +702,9 @@ public sealed partial class MainPage : Page
                         {
                             convertedValue = Convert.ChangeType(kvp.Value, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            _logger.Log($"Fehler beim Konvertieren von '{kvp.Key}' in MappeZuEntity: {ex.Message}");
                             continue;
                         }
                     }
@@ -702,4 +714,5 @@ public sealed partial class MainPage : Page
         }
         return entity;
     }
+
 }
