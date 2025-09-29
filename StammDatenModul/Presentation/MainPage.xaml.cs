@@ -14,6 +14,7 @@ using StammDatenModul.Utility;
 using StammDatenModul.Validator;
 using StammDatenModulData.Data;
 using StammDatenModulData.Models;
+using Gehax.Core.Logging;
 
 namespace StammDatenModul.Presentation;
 
@@ -24,7 +25,7 @@ public sealed partial class MainPage : Page
     Dictionary<string, List<Rule>> _rules = new();
     static List<string> _boolTable = new();
     static List<string> _boolTableInt = new();
-    public Logger _logger = new Logger();
+    
     public MainPage()
     {
         this.InitializeComponent();
@@ -33,6 +34,8 @@ public sealed partial class MainPage : Page
         var tempRules = SecureDecryptHelper.ReadContainerFromFile("ValidationRules.geConf");
         var tempBoolTable = SecureDecryptHelper.ReadContainerFromFile("bool.geConf");
         var tempBoolTableInt = SecureDecryptHelper.ReadContainerFromFile("boolInt.geConf");
+
+        Logger.Configure(new PathProvider());
 
 
         _notAllowedEntityTypes = JsonSerializer.Deserialize<List<string>>(tempEntityTypes);
@@ -593,7 +596,7 @@ public sealed partial class MainPage : Page
 
         if (entityType == null)
         {
-            _logger.Log($"Typ '{tabellenName}' nicht gefunden.");
+            Logger.Log($"Typ '{tabellenName}' nicht gefunden.");
             throw new Exception($"Typ '{tabellenName}' nicht gefunden.");
         }
 
@@ -614,7 +617,7 @@ public sealed partial class MainPage : Page
                 }
                 catch (Exception ex)
                 {
-                    _logger.Log($"Fehler beim Konvertieren von '{kvp.Key}': {ex.Message}");
+                    Logger.Log($"Fehler beim Konvertieren von '{kvp.Key}': {ex.Message}");
                     continue;
                 }
             }
@@ -627,7 +630,7 @@ public sealed partial class MainPage : Page
         if (artikelErrors.Any())
         {
             var fehlerMeldungen = string.Join("\n", artikelErrors);
-            _logger.Log($"Validierungsfehler beim Speichern: {fehlerMeldungen}");
+            Logger.Log($"Validierungsfehler beim Speichern: {fehlerMeldungen}");
             throw new ValidationException($"Validierungsfehler:\n{fehlerMeldungen}");
         }
         _context.Add(entity);
@@ -644,7 +647,7 @@ public sealed partial class MainPage : Page
 
             if (entityType == null)
             {
-                _logger.Log($"Typ '{tabellenName}' nicht gefunden.LoeschenDynamischAsync");
+                Logger.Log($"Typ '{tabellenName}' nicht gefunden.LoeschenDynamischAsync");
                 throw new Exception($"Typ '{tabellenName}' nicht gefunden.");
             }
 
@@ -659,7 +662,7 @@ public sealed partial class MainPage : Page
                     var prop = daten.GetType().GetProperty(p.Name);
                     if (prop == null)
                     {
-                        _logger.Log($"Property '{p.Name}' fehlt im Datensatz.LoeschenDynamischAsync");
+                        Logger.Log($"Property '{p.Name}' fehlt im Datensatz.LoeschenDynamischAsync");
                         throw new Exception($"Property '{p.Name}' fehlt im Datensatz.");
                     }
                     return prop.GetValue(daten);
@@ -670,7 +673,7 @@ public sealed partial class MainPage : Page
             var entityFromDb = await _context.FindAsync(entityType, keyValues);
             if (entityFromDb == null)
             {
-                _logger.Log("Datensatz nicht gefunden.LoeschenDynamischAsync");
+                Logger.Log("Datensatz nicht gefunden.LoeschenDynamischAsync");
                 throw new Exception("Datensatz nicht gefunden.");
             }
 
@@ -680,7 +683,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception ex)
         {
-            _logger.Log($"Fehler beim Löschen: {ex.Message}");
+            Logger.Log($"Fehler beim Löschen: {ex.Message}");
             Debug.WriteLine("Fehler beim Löschen: " + ex.Message);
         }
     }
@@ -704,7 +707,7 @@ public sealed partial class MainPage : Page
                         }
                         catch (Exception ex)
                         {
-                            _logger.Log($"Fehler beim Konvertieren von '{kvp.Key}' in MappeZuEntity: {ex.Message}");
+                            Logger.Log($"Fehler beim Konvertieren von '{kvp.Key}' in MappeZuEntity: {ex.Message}");
                             continue;
                         }
                     }

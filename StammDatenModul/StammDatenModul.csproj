@@ -48,6 +48,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Gehax.Core.Logging\Gehax.Core.Logging\Gehax.Core.Logging.csproj" />
     <ProjectReference Include="..\StammDatenModulData\StammDatenModulData.csproj" />
   </ItemGroup>
   <ItemGroup>
