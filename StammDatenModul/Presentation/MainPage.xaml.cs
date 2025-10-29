@@ -608,7 +608,7 @@ public sealed partial class MainPage : Page
             if (prop == null || !prop.CanWrite)
                 continue;
 
-            object convertedValue = null;
+            object? convertedValue = null;
             if (kvp.Value != null)
             {
                 try

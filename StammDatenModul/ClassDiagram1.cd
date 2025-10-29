@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Access" MembersFormat="FullSignature">
+  <Class Name="StammDatenModul.Models.PathProvider" BaseTypeListCollapsed="true">
+    <Position X="6.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\PathProvider.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="StammDatenModul.Models.EncryptedContainer">
+    <Position X="4.75" Y="0.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAgAAAAAAAAAIAAAACAAAAAAAA=</HashCode>
+      <FileName>Models\EncryptedContainer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StammDatenModul.Models.ColumnDefinitionDatabase" Collapsed="true">
+    <Position X="1.25" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAIAAAAAAAAAAAQAAAAAAAAAAAAAAAAAIAA=</HashCode>
+      <FileName>Models\ColumnDefinition.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StammDatenModul.Presentation.MainPage" Collapsed="true">
+    <Position X="3" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>wEAAAAgIAAAABAiAAAAACCBAACAIQEAQhAABgAIAAQE=</HashCode>
+      <FileName>Presentation\MainPage.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Gehax.Core.Logging.Logger" Collapsed="true">
+    <Position X="1.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="StammDatenModulData.Data.MyDbContext">
+    <Position X="4.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="StammDatenModul.Validator.Rule" Collapsed="true">
+    <Position X="1.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAAAAAAAAQAAAAAAAAQAAAAAAQAAAA=</HashCode>
+      <FileName>Validator\Rule.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StammDatenModul.Validator.RuleResult" Collapsed="true">
+    <Position X="3" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgBAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIAQAAAA=</HashCode>
+      <FileName>Validator\RuleResult.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GenericValidator">
+    <Position X="8" Y="0.5" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAA=</HashCode>
+      <FileName>Validator\Validator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DynamicEvaluator" Collapsed="true">
+    <Position X="3" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AYAAAAAAAAAAAAAAAAAAAgAgAAAAAAACAAAAAABAAAA=</HashCode>
+      <FileName>Validator\DynamicEvaluator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Gehax.Core.Logging.IPathProvider" Collapsed="true">
+    <Position X="1.25" Y="3.75" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
